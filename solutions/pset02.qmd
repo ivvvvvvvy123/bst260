@@ -1,6 +1,56 @@
-BST 260 Problem set 2: Basics and polynomials
-Author: Yixuan(Ivy) Xin
-Exercise 1.
-Answer: c(1,2,3) combine 1,2,3 to get the numeric vector1,2,3. Seq(1,2,3) also gives a sequence between 1 and 3 with a step size 1, so it also gets vector 1,2,3. all.equal() evaluate if the two are equal, and the result should be true because the two vectors are equal.
+---
+title: "BST 260 Problem set 2: Basics and polynomials"
+author: "Yixuan Xin"
+format: html
+editor: visual
+---
 
-Exercise 2.
+### Exercise 1.
+
+Answer: c(1,2,3) combine 1,2,3 to get the numeric vector1,2,3. seq(1,3,1) also produces a sequence between 1 and 3 with a step size 1, so it also gets vector 1,2,3. all.equal() compares the two vectors, and the result is TRUE because the two vectors are equal.
+
+### Exercise 2.
+
+```{r}
+length(seq(1,100,.5))
+```
+
+The length of the vector is 199.
+
+### Exercise 3.
+
+```{r}
+c(3,4,5,6) > 4
+```
+
+It compares 4 with each element of c(3,4,5,6) to check if each element is greater than 4. The result has a type of a logical vector.
+
+# Anscombe plots
+
+```{r}
+par(mfrow=c(2,2), mar=c(4,2,1,1))
+with(anscombe, plot(x1,y1,xlim=c(4,20), ylim=c(3,13)))
+with(anscombe, plot(x2,y2,xlim=c(4,20), ylim=c(3,13)))
+with(anscombe, plot(x3,y3,xlim=c(4,20), ylim=c(3,13)))
+with(anscombe, plot(x4,y4,xlim=c(4,20), ylim=c(3,13)))
+```
+
+Description: the purpose of the xlim and ylim settings is to set the ranges of the axes. For instance, xlim=c(4,20) sets the x-axis range from 4 to 20, and ylim=c(3,13) sets the y-axis range from 3 to 13. In this way, the vectors are set with the same coordinate scale, which standardize between 4 plots and make comparison easier and more straightforward.
+
+## A polynomial function to model the Anscombe x2:y2 data
+
+```{r}
+q1 = function(x) -7 + 2.78*x -.127*x*x
+par(mfrow=c(1,1))
+with(anscombe, plot(x2,y2))
+newx = seq(4,14,.1)
+
+q2 = function(x) -6 + 2.78*x -.127*x*x
+
+lines(newx,q1(newx))
+lines(newx,q2(newx))
+```
+
+### Mathematical explanation
+
+The defect of q1 is that it has the correct shape, but the intercept is inaccurate, so the curve is below the observed data points. To repaired it, I increased the intercept from -7 to 07, shifting the curve upward by 1, so points can go through q2.
