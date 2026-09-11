@@ -1,2 +1,6 @@
 BST 260 Problem set 2: Basics and polynomials
 Author: Yixuan(Ivy) Xin
+Exercise 1.
+Answer: c(1,2,3) combine 1,2,3 to get the numeric vector1,2,3. Seq(1,2,3) also gives a sequence between 1 and 3 with a step size 1, so it also gets vector 1,2,3. all.equal() evaluate if the two are equal, and the result should be true because the two vectors are equal.
+
+Exercise 2.
