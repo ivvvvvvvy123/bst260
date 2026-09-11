@@ -1,0 +1,2 @@
+BST 260 Problem set 2: Basics and polynomials
+Author: Yixuan(Ivy) Xin
