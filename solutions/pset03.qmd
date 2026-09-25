@@ -1,0 +1,6 @@
+---
+title: "BST 260 Problem set 3: Logic, reading, guns and geography"
+author: "Yixuan Xin"
+format: html
+editor: visual
+---
