@@ -155,6 +155,56 @@ From the result, we see that the mean value among these states having missing va
 
 ### Exercise 11.
 
+- 11.a: download.file(url, destfile). It can be more interpretable throug separating the ceation of the temorary file and the donload operaition to two lines.
+
+  tf \<- tempfile() download.file("[https://tinyurl.com/randgunlaw",](https://tinyurl.com/randgunlaw",) tf)
+
+- 11.b : read_xlsx() is for reading excel files,with a path as input. 2 means get the second worksheet.
+
+- 11.c: there are 1902 rows.
+
+- 11.d: 1813.
+
+- 11.e: my prompt is: use dplyr and retrieve the earliest valu fo the Effective Date Year column from the lawdat data frame.
+
+  - Code and result:
+
+    > lawdat \|\> + summarize(earliest_year = min(`Effective Date Year`, na.rm = TRUE))
+    >
+    > \# A tibble: 1 × 1
+    >
+    > earliest_year
+    >
+    > <dbl> 1
+    >
+    > 1813
+
+- 11.f.1: The take home message is the most common change is the implementation of the restrictive gun laws(1241), and the least common change is 'see note' with a permissive effect(2).
+
+- 11.f.2:
+
+  > lawdat \|\> + count(`Type of Change`, Effect, sort = TRUE)
+  >
+  > \# A tibble: 7 × 3 `Type of Change` Effect n
+  >
+  > <chr> <chr> <int>
+  >
+  > 1 Implement Restrictive 1241
+  >
+  > 2 Modify Restrictive 215
+  >
+  > 3 Modify Permissive 192
+  >
+  > 4 Implement Permissive 187
+  >
+  > 5 Repeal Permissive 59
+  >
+  > 6 Repeal Restrictive 6
+  >
+  > 7 See note Permissive 2
+
+From the code, we can see that this result matches with the reference code. I think count() is a brief way to group variables and sort is helpful for listing from the most to the least.
+
 ### Exercise 12.
 
 ### Exercise 13.
