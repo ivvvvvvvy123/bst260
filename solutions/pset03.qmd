@@ -45,6 +45,10 @@ If you enter but the sentence is false, then we should know that you are not a m
 
 install.packages("dslabs")
 
+### Exercise 4.
+
+This issue is this data is from 2010, which is too old from current year. Moreover, it is not a primary dataset source.
+
 ### Exercise 5.
 
 > dim(cdcmurd)
@@ -130,6 +134,24 @@ They both have same result of 28, representing 28 rows having missing values in 
 From the result, we see that the mean value among these states having missing values have a relatively low mean deaths, while the median deaths is 250, which is higher. Therefore, the death rates are missing probably because a low death numbers and cdc may not report a statistically stable death rate.
 
 ### Exercise 10.
+
+- Line 1 will filter 204 rows.
+
+- For Line 2, Death.Rate define the y coordinates of the plot.
+
+- the boxplot shows the distribution of a continuous variable and some statistics, including the median, two hinges, two whiskers, and outlying points.
+
+  - Output from R documentation:Description
+
+    The boxplot compactly displays the distribution of a continuous variable. It visualises five summary statistics (the median, two hinges and two whiskers), and all "outlying" points individually.
+
+  - Output from chatbot: The boxplot provides a statistical summary of the distribution of `Death.Rate` for each year. It shows the median, the first and third quartiles, the interquartile range, whiskers, and potential outliers. The beeswarm plot, in contrast, shows the individual observations. Each point represents a location’s death rate, and points with similar values are shifted horizontally to reduce overlap. Thus, the boxplot emphasizes summary statistics, while the beeswarm preserves information about the individual observations and the shape and density of the distribution.
+
+    > myp2 \<- cdcmurd \|\> + filter(YEAR %in% c(2019, 2020, 2021, 2022)) \|\> + ggplot(aes(factor(YEAR), Death.Rate, text = Location)) + + geom_boxplot(outlier.shape = NA) + + geom_beeswarm(alpha = 0.7) + + labs( + x = "Year", + y = "Homicide death rate per 100,000", + title = "Homicide Death Rates by State, 2019–2022" + )
+    >
+    > ggplotly(myp2)
+
+    The ubdated version contains a better X-axis name called Year, and the Death.Rate is elaborate with unit, and it adds a title. Moreover, it makes the points less dense.
 
 ### Exercise 11.
 
