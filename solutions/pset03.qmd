@@ -17,7 +17,7 @@ The statement can be formalized as
 
 $$C \rightarrow (P \lor S)$$
 
-It is false when $C$ is true and both $P$ and $S$ are wrong. so C cannot lead to $P$ or $S$.
+It is false when $C$ is true and both $P$ and $S$ are false.
 
 ### Exercise 2.
 
@@ -41,13 +41,11 @@ It is false if it is not sunny and not warm, but the picnic is not cancelled.
 
 $$E\leftrightarrow (M \lor P)$$
 
-If you enter but the sentence is false, then we should know that you are not a member and you did not paid the fee.
-
-install.packages("dslabs")
+If you enter but the sentence is false, then we should know that you are not a member and you did not pay the fee. If E is true, then $M \lor P$ should be false.
 
 ### Exercise 4.
 
-This issue is this data is from 2010, which is too old from current year. Moreover, it is not a primary dataset source.
+This issue is that this data is from 2010, which is too old to demonstrate current patterns. Moreover, it is not a primary dataset source because it is from Wikipedia instead of an original FBI source.
 
 ### Exercise 5.
 
@@ -55,17 +53,17 @@ This issue is this data is from 2010, which is too old from current year. Moreov
 >
 > \[1\] 612 5
 
-The output shows that there is 612 rows in the dataset.
+The output shows that there are 612 rows in the dataset. Adjusted rate definition makes sense because it allows us to compare death rates across different age distributions.
 
 ### Exercise 6.
 
-One will use the command table(table(head(cdcmurd\$Location,120))) if he wants to know the number of times the states' name appear. The output gives me:
+One will use the command table(table(head(cdcmurd\$Location,120))) if he wants to know the number of times the states' location appear. The output gives me:
 
 2 3
 
 33 18
 
-It shows that among the first 120 rows, there are 33 states' names appear twice and 18 states' names appear three times.
+It shows that among the first 120 rows, there are 33 states' locations appear twice and 18 states' locations appear three times.
 
 The results from console give:
 
@@ -79,19 +77,19 @@ The results from console give:
 >
 > 12 12 12 12 12 12
 
-For the first one, it means there are 51 states' names appear three times in the first 153 rows, and the second one is the number of times each states' names appear. To look at the second one clearer, I use:
+For the first one, it means there are 51 states' locatins appear three times in the first 153 rows, and the second one is the number of times each states' names appear. To look at the second one clearer, I use:
 
 > table(table(cdcmurd\$Location))
 >
 > 12 51
 
-The result shows that for 51 states each name appears 12 times, which is corresponding to 51(12)=612 rows.
+The result shows that for 51 states each location appears 12 times, which is corresponding to 51(12)=612 rows.
 
-From this, I learn that the double table construction is good to show the frequency of number of appearance of each catgeory.
+From this, I learn that the table(table()) construction is good to show the frequency of number of appearance of each category.
 
 ### Exercise 7.
 
-any(is.na(x) tries to find any null value and from a series of boolean and return true if there is at least one null value and vise versa. function(x) is a function and search for null value from x. apply() functions here wants to know in cdcmurd, for each column(with margin=2), find any missing value. In general, this line of code wants to check each column of cdcmurd and see if there is at least one missing value in that column.
+any(is.na(x) tries to find any missing value and from a series of boolean and return true if there is at least one missing value and vise versa. function(x) is a function. apply() function wants to find any missing value in cdcmurd for each column(margin=2). In general, this line of code wants to check each column of cdcmurd and see if there is at least one missing value in that column.
 
 > apply(cdcmurd,2,function(x) any(is.na(x))) YEAR Location Death.Rate Deaths URL
 >
@@ -101,13 +99,13 @@ The output shows that for Death.Rate column, it has at least one missing value.
 
 ### Exercise 8.
 
-This line gets all rows that contains null value in the Death.Rate column in the cdcmurd, and count how many rows are there in total.
+This line gets all rows that contains an NA in the Death.Rate column in the cdcmurd, and count how many rows are there in total.
 
 > cdcmurd\[which(is.na(cdcmurd\$Death.Rate)),\] \|\> nrow()
 >
 > \[1\] 28
 
-The result shows there is 28 rows.
+The result shows there is 28 rows having missing Death.Rate values.
 
 ### Exercise 9.
 
@@ -127,11 +125,19 @@ They both have same result of 28, representing 28 rows having missing values in 
 >
 > \# A tibble: 6 × 2 Location mn
 >
-> <chr> <dbl> 1 ME 19\
-> 2 ND 14.5 3 NH 17.5 4 RI 19\
-> 5 VT 13.7 6 WY 17.2
+> <chr> <dbl>
+>
+> 1 ME 19\
+> 2 ND 14.5
+>
+> 3 NH 17.5
+>
+> 4 RI 19\
+> 5 VT 13.7
+>
+> 6 WY 17.2
 
-From the result, we see that the mean value among these states having missing values have a relatively low mean deaths, while the median deaths is 250, which is higher. Therefore, the death rates are missing probably because a low death numbers and cdc may not report a statistically stable death rate.
+From the result, we see that the mean value among these states having missing values have a relatively low mean deaths, ranging from 10 to 19. However, the median number of deaths is 250, which is higher. Therefore, the death rates are missing probably because a low death numbers and cdc may not report a statistically stable death rate. I learn to compare different summary statistics and compare there differences.
 
 ### Exercise 10.
 
@@ -139,11 +145,17 @@ From the result, we see that the mean value among these states having missing va
 
 - For Line 2, Death.Rate define the y coordinates of the plot.
 
-- the boxplot shows the distribution of a continuous variable and some statistics, including the median, two hinges, two whiskers, and outlying points.
+- the boxplot shows the distribution of a continuous variable and some statistics, including the median, two hinges, two whiskers, and outlying points.The geom_beeswarm gives offset points in categories to avoid overplotting.
 
-  - Output from R documentation:Description
+  - Output from R documentation:
+
+    Boxplot Description:
 
     The boxplot compactly displays the distribution of a continuous variable. It visualises five summary statistics (the median, two hinges and two whiskers), and all "outlying" points individually.
+
+  - geom_beeswarm:
+
+    The beeswarm geom is a convenient means to offset points within categories to reduce overplotting. Uses the beeswarm package.
 
   - Output from chatbot: The boxplot provides a statistical summary of the distribution of `Death.Rate` for each year. It shows the median, the first and third quartiles, the interquartile range, whiskers, and potential outliers. The beeswarm plot, in contrast, shows the individual observations. Each point represents a location’s death rate, and points with similar values are shifted horizontally to reduce overlap. Thus, the boxplot emphasizes summary statistics, while the beeswarm preserves information about the individual observations and the shape and density of the distribution.
 
@@ -151,11 +163,11 @@ From the result, we see that the mean value among these states having missing va
     >
     > ggplotly(myp2)
 
-    The ubdated version contains a better X-axis name called Year, and the Death.Rate is elaborate with unit, and it adds a title. Moreover, it makes the points less dense.
+    The ubdated version contains a better X-axis name called Year, and the Death.Rate specifies the unit of death, and it adds a descriptive title. Moreover, it makes the points less dense and visually straightforward.
 
 ### Exercise 11.
 
-- 11.a: download.file(url, destfile). It can be more interpretable throug separating the ceation of the temorary file and the donload operaition to two lines.
+- 11.a: download.file(url, destfile). It can be more interpretable through separating the creation of the temporary file and the download operation to two lines.
 
   tf \<- tempfile() download.file("[https://tinyurl.com/randgunlaw",](https://tinyurl.com/randgunlaw",) tf)
 
@@ -165,7 +177,7 @@ From the result, we see that the mean value among these states having missing va
 
 - 11.d: 1813.
 
-- 11.e: my prompt is: use dplyr and retrieve the earliest valu fo the Effective Date Year column from the lawdat data frame.
+- 11.e: my prompt is: use dplyr and retrieve the earliest value fo the Effective Date Year column from the lawdat data frame.
 
   - Code and result:
 
@@ -227,8 +239,8 @@ Missouri and Tennessee have the largest frequencies of legislative changes that 
 
 ### Exercise 14.
 
-The choice of states: As the exercise 13 shows, California has the largest frequencies of legislative changes that have 'Restrictive' effects, and Missouri and Tennessee have the largest frequencies of legislative changes that have “Permissive” effects. New York has more restrictive changes over permissive changes with a big difference. These states allow for comparison of homicide-rate patterns among states with different changes.
+The choice of states: As the exercise 13 shows, California has the largest frequencies of legislative changes that have 'Restrictive' effects, and Tennessee has the largest frequencies of legislative changes that have “Permissive” effects. New York has more restrictive changes over permissive changes with a big difference. These states allow for comparison of homicide-rate patterns among states with different changes. Mississippi is chose probably because it has a more balanced permissive and restrictive.
 
-Patterns: From the plot we can see that New York has the lowest death rate, and then California, Missouri, and Tennessee is the highest. The four states all show general similar pattern across years. Missouri has consistenly higher highest death rate than other states, and the highest is around 2021.
+Patterns: From the plot we can see that New York has the lowest death rate, and then California, Mississippi, and Tennessee is the highest. The four states all show general similar pattern across years. Mississippi has consistenly higher highest death rate than other states, and the highest is around 2021.
 
-To make the result more precise, we could work on data filtering and combination.
+Data filtering and combination: we can harmonize the state identifiers and combine RAND legislation data with the CDC homicide data by state and year. Then we can compare the type of legislative changes with death rates and define an appropriate time period.
