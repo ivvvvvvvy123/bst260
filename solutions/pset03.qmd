@@ -196,32 +196,22 @@ ggplotly(myp2)
 - 11.e: my prompt is: use dplyr and retrieve the earliest value fo the Effective Date Year column from the lawdat data frame.
 
   - Code and result:
-
-    > llawdat \|\>
-    >
-    > summarize(
-    >
-    > earliest_year = min(\`Effective Date Year\`, na.rm = TRUE)
-    >
-    > )
-    >
-    > \# A tibble: 1 × 1
-    >
-    > earliest_year
-    >
-    > <dbl> 1
-    >
+```{r}
+lawdat |>
+  summarize(
+    earliest_year = min(`Effective Date Year`, na.rm = TRUE)
+  )
+```
     > 1813
 
 - 11.f.1: The take home message is the most common change is the implementation of the restrictive gun laws(1241), and the least common change is 'see note' with a permissive effect(2).
 
 - 11.f.2:
 
-  > lawdat \|\> + count(`Type of Change`, Effect, sort = TRUE)
-  >
-  > \# A tibble: 7 × 3 `Type of Change` Effect n
-  >
-  > <chr> <chr> <int>
+```{r}
+lawdat |>
+  count(`Type of Change`, Effect, sort = TRUE)
+```
   >
   > 1 Implement Restrictive 1241
   >
@@ -249,7 +239,11 @@ It cannot associate each point with certain state because we only group by Effec
 
 Missouri and Tennessee have the largest frequencies of legislative changes that have “Permissive” effects(15). California state have the largest frequencies of legislative changes that have “Restrictive” effects(73).
 
-> lawdat \|\> + count(Effect, State) \|\> + slice_max(n, by = Effect)
+```{r}
+lawdat |>
+  count(Effect, State) |>
+  slice_max(n, by = Effect)
+```
 >
 > \# A tibble: 3 × 3 Effect State n <chr> <chr> <int>
 >
