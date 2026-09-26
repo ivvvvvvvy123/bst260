@@ -4,3 +4,81 @@ author: "Yixuan Xin"
 format: html
 editor: visual
 ---
+
+### Exercise 1.
+
+- $C$ = the coupon is valid
+
+- $P$ = the price is reduced
+
+- $S$ = the shipping is free
+
+The statement can be formalized as
+
+$$C \rightarrow (P \lor S)$$
+
+It is false when $C$ is true and both $P$ and $S$ are wrong. so C cannot lead to $P$ or $S$.
+
+### Exercise 2.
+
+- S = it is sunny
+
+- W = it is warm
+
+- P = picnic is cancelled
+
+$$ (\neg S \wedge \neg W)\rightarrow P$$
+
+It is false if it is not sunny and not warm, but the picnic is not cancelled.
+
+### Exercise 3.
+
+- E = you may enter the contest
+
+- M = you are a member
+
+- P = you have paid the fee
+
+$$E\leftrightarrow (M \lor P)$$
+
+If you enter but the sentence is false, then we should know that you are not a member and you did not paid the fee.
+
+install.packages("dslabs")
+
+### Exercise 5.
+
+> dim(cdcmurd)
+>
+> \[1\] 612 5
+
+The output shows that there is 612 rows in the dataset.
+
+### Exercise 6.
+
+One will use the command table(table(head(cdcmurd\$Location,120))) if he wants to know the number of times the states' name appear. The output gives me:
+
+2 3
+
+33 18
+
+It shows that among the first 120 rows, there are 33 states' names appear twice and 18 states' names appear three times.
+
+The results from console give:
+
+> table(table(head(cdcmurd\$Location,153)))
+>
+> 3 51
+
+> head(table(cdcmurd\$Location))
+>
+> AK AL AR AZ CA CO
+>
+> 12 12 12 12 12 12
+
+For the first one, it measn there are 51 states'names appear three times in the first 153 rows, and the second one is the number of times each states' names appear. To look at the second one clearer, I use:
+
+> table(table(cdcmurd\$Location))
+>
+> 12 51
+
+The result shows that for 51 states each name appears 12 times, which is corresponding to 51(12)=612 rows.
