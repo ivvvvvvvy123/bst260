@@ -72,19 +72,21 @@ The results from console give:
 ```{r}
 table(table(head(cdcmurd$Location,153)))
 ```
+
 ```{r}
 head(table(cdcmurd$Location))
 ```
+
 > AK AL AR AZ CA CO
 >
 > 12 12 12 12 12 12
 
 For the first one, it means there are 51 states' locatins appear three times in the first 153 rows, and the second one is the number of times each states' names appear. To look at the second one clearer, I use:
+
 ```{r}
 table(table(cdcmurd $Location))
 ```
 
->
 > 12 51
 
 The result shows that for 51 states each location appears 12 times, which is corresponding to 51(12)=612 rows.
@@ -94,42 +96,49 @@ From this, I learn that the table(table()) construction is good to show the freq
 ### Exercise 7.
 
 any(is.na(x) tries to find any missing value and from a series of boolean and return true if there is at least one missing value and vise versa. function(x) is a function. apply() function wants to find any missing value in cdcmurd for each column(margin=2). In general, this line of code wants to check each column of cdcmurd and see if there is at least one missing value in that column.
+
 ```{r}
 apply(cdcmurd,2,function(x) any(is.na(x)))
 ```
-YEAR Location Death.Rate Deaths URL
->
-> FALSE FALSE TRUE FALSE FALSE
+
+YEAR Location Death.Rate Deaths URL \> \> FALSE FALSE TRUE FALSE FALSE
 
 The output shows that for Death.Rate column, it has at least one missing value.
 
 ### Exercise 8.
 
 This line gets all rows that contains an NA in the Death.Rate column in the cdcmurd, and count how many rows are there in total.
+
 ```{r}
 cdcmurd[which(is.na(cdcmurd $Death.Rate)),] |> nrow()
 ```
+
 > \[1\] 28
 
 The result shows there is 28 rows having missing Death.Rate values.
 
 ### Exercise 9.
+
 ```{r}
 cdcmurd[which(is.na(cdcmurd $Death.Rate)),] |> nrow()
 ```
->
+
 > \[1\] 28
 
 They both have same result of 28, representing 28 rows having missing values in Death.rate column. Code in exercise 8 gives a numeric value, while code in exercise 9 gives a dataframe and one column called n contains 28.
+
 ```{r}
 median(cdcmurd$Deaths)
 ```
+
 > \[1\] 250
 
 ### 
+
 ```{r}
 cdcmurd |> filter(is.na(Death.Rate)) |>  group_by(Location) |> summarise(mn=mean(Deaths))
 ```
+
 > \# A tibble: 6 × 2 Location mn
 >
 > <chr> <dbl>
@@ -165,21 +174,22 @@ From the result, we see that the mean value among these states having missing va
     The beeswarm geom is a convenient means to offset points within categories to reduce overplotting. Uses the beeswarm package.
 
   - Output from chatbot: The boxplot provides a statistical summary of the distribution of `Death.Rate` for each year. It shows the median, the first and third quartiles, the interquartile range, whiskers, and potential outliers. The beeswarm plot, in contrast, shows the individual observations. Each point represents a location’s death rate, and points with similar values are shifted horizontally to reduce overlap. Thus, the boxplot emphasizes summary statistics, while the beeswarm preserves information about the individual observations and the shape and density of the distribution.
-```{r}
-myp2 <- cdcmurd |>
-  filter(YEAR %in% c(2019, 2020, 2021, 2022)) |>
-  ggplot(aes(factor(YEAR), Death.Rate, text = Location)) +
-  geom_boxplot(outlier.shape = NA) +
-  geom_beeswarm(alpha = 0.7) +
-  labs(
-    x = "Year",
-    y = "Homicide death rate per 100,000",
-    title = "Homicide Death Rates by State, 2019–2022"
-  )
-ggplotly(myp2)
-```
 
-    The ubdated version contains a better X-axis name called Year, and the Death.Rate specifies the unit of death, and it adds a descriptive title. Moreover, it makes the points less dense and visually straightforward.
+  ```{r}
+  myp2 <- cdcmurd |>
+    filter(YEAR %in% c(2019, 2020, 2021, 2022)) |>
+    ggplot(aes(factor(YEAR), Death.Rate, text = Location)) +
+    geom_boxplot(outlier.shape = NA) +
+    geom_beeswarm(alpha = 0.7) +
+    labs(
+      x = "Year",
+      y = "Homicide death rate per 100,000",
+      title = "Homicide Death Rates by State, 2019–2022"
+    )
+  ggplotly(myp2)
+  ```
+
+  The ubdated version contains a better X-axis name called Year, and the Death.Rate specifies the unit of death, and it adds a descriptive title. Moreover, it makes the points less dense and visually straightforward.
 
 ### Exercise 11.
 
@@ -193,16 +203,18 @@ ggplotly(myp2)
 
 - 11.d: 1813.
 
-- 11.e: my prompt is: use dplyr and retrieve the earliest value fo the Effective Date Year column from the lawdat data frame.
+- 11.e: I use the chatgpt model and my prompt is: use dplyr and retrieve the earliest value fo the Effective Date Year column from the lawdat data frame. I learn that summarize is a brief way to sort and select.
 
   - Code and result:
-```{r}
-lawdat |>
-  summarize(
-    earliest_year = min(`Effective Date Year`, na.rm = TRUE)
-  )
-```
-    > 1813
+
+  ```{r}
+  lawdat |>
+    summarize(
+      earliest_year = min(`Effective Date Year`, na.rm = TRUE)
+    )
+  ```
+
+  > 1813
 
 - 11.f.1: The take home message is the most common change is the implementation of the restrictive gun laws(1241), and the least common change is 'see note' with a permissive effect(2).
 
@@ -212,20 +224,20 @@ lawdat |>
 lawdat |>
   count(`Type of Change`, Effect, sort = TRUE)
 ```
-  >
-  > 1 Implement Restrictive 1241
-  >
-  > 2 Modify Restrictive 215
-  >
-  > 3 Modify Permissive 192
-  >
-  > 4 Implement Permissive 187
-  >
-  > 5 Repeal Permissive 59
-  >
-  > 6 Repeal Restrictive 6
-  >
-  > 7 See note Permissive 2
+
+> 1 Implement Restrictive 1241
+>
+> 2 Modify Restrictive 215
+>
+> 3 Modify Permissive 192
+>
+> 4 Implement Permissive 187
+>
+> 5 Repeal Permissive 59
+>
+> 6 Repeal Restrictive 6
+>
+> 7 See note Permissive 2
 
 From the code, we can see that this result matches with the reference code. I think count() is a brief way to group variables and sort is helpful for listing from the most to the least.
 
@@ -244,7 +256,7 @@ lawdat |>
   count(Effect, State) |>
   slice_max(n, by = Effect)
 ```
->
+
 > \# A tibble: 3 × 3 Effect State n <chr> <chr> <int>
 >
 > 1 Permissive Missouri 15
