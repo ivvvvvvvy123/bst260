@@ -207,6 +207,28 @@ From the code, we can see that this result matches with the reference code. I th
 
 ### Exercise 12.
 
+The code first filter the column 'Effect' with only the 'Permissive', and then use summarize to group by 'Effective Date Year', and calculate how many permissive legislative changes happen in that year. Then it uses ggplot() to put the x axis as 'Effective Date Year'. and y axis as the number of changes, and making a dot plot.
+
+It cannot associate each point with certain state because we only group by Effective Date Year instead of by state. Each point represents legislative changes for multiple states instead of only one.
+
 ### Exercise 13.
 
+Missouri and Tennessee have the largest frequencies of legislative changes that have “Permissive” effects(15). California state have the largest frequencies of legislative changes that have “Restrictive” effects(73).
+
+> lawdat \|\> + count(Effect, State) \|\> + slice_max(n, by = Effect)
+>
+> \# A tibble: 3 × 3 Effect State n <chr> <chr> <int>
+>
+> 1 Permissive Missouri 15
+>
+> 2 Permissive Tennessee 15
+>
+> 3 Restrictive California 73
+
 ### Exercise 14.
+
+The choice of states: As the exercise 13 shows, California has the largest frequencies of legislative changes that have 'Restrictive' effects, and Missouri and Tennessee have the largest frequencies of legislative changes that have “Permissive” effects. New York has more restrictive changes over permissive changes with a big difference. These states allow for comparison of homicide-rate patterns among states with different changes.
+
+Patterns: From the plot we can see that New York has the lowest death rate, and then California, Missouri, and Tennessee is the highest. The four states all show general similar pattern across years. Missouri has consistenly higher highest death rate than other states, and the highest is around 2021.
+
+To make the result more precise, we could work on data filtering and combination.
