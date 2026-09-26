@@ -75,10 +75,66 @@ The results from console give:
 >
 > 12 12 12 12 12 12
 
-For the first one, it measn there are 51 states'names appear three times in the first 153 rows, and the second one is the number of times each states' names appear. To look at the second one clearer, I use:
+For the first one, it means there are 51 states' names appear three times in the first 153 rows, and the second one is the number of times each states' names appear. To look at the second one clearer, I use:
 
 > table(table(cdcmurd\$Location))
 >
 > 12 51
 
 The result shows that for 51 states each name appears 12 times, which is corresponding to 51(12)=612 rows.
+
+From this, I learn that the double table construction is good to show the frequency of number of appearance of each catgeory.
+
+### Exercise 7.
+
+any(is.na(x) tries to find any null value and from a series of boolean and return true if there is at least one null value and vise versa. function(x) is a function and search for null value from x. apply() functions here wants to know in cdcmurd, for each column(with margin=2), find any missing value. In general, this line of code wants to check each column of cdcmurd and see if there is at least one missing value in that column.
+
+> apply(cdcmurd,2,function(x) any(is.na(x))) YEAR Location Death.Rate Deaths URL
+>
+> FALSE FALSE TRUE FALSE FALSE
+
+The output shows that for Death.Rate column, it has at least one missing value.
+
+### Exercise 8.
+
+This line gets all rows that contains null value in the Death.Rate column in the cdcmurd, and count how many rows are there in total.
+
+> cdcmurd\[which(is.na(cdcmurd\$Death.Rate)),\] \|\> nrow()
+>
+> \[1\] 28
+
+The result shows there is 28 rows.
+
+### Exercise 9.
+
+> cdcmurd\[which(is.na(cdcmurd\$Death.Rate)),\] \|\> nrow()
+>
+> \[1\] 28
+
+They both have same result of 28, representing 28 rows having missing values in Death.rate column. Code in exercise 8 gives a numeric value, while code in exercise 9 gives a dataframe and one column called n contains 28.
+
+> median(cdcmurd\$Deaths)
+>
+> \[1\] 250
+
+### 
+
+> cdcmurd \|\> filter(is.na(Death.Rate)) \|\> + group_by(Location) \|\> summarise(mn=mean(Deaths))
+>
+> \# A tibble: 6 × 2 Location mn
+>
+> <chr> <dbl> 1 ME 19\
+> 2 ND 14.5 3 NH 17.5 4 RI 19\
+> 5 VT 13.7 6 WY 17.2
+
+From the result, we see that the mean value among these states having missing values have a relatively low mean deaths, while the median deaths is 250, which is higher. Therefore, the death rates are missing probably because a low death numbers and cdc may not report a statistically stable death rate.
+
+### Exercise 10.
+
+### Exercise 11.
+
+### Exercise 12.
+
+### Exercise 13.
+
+### Exercise 14.
