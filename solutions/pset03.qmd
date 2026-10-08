@@ -269,6 +269,6 @@ lawdat |>
 
 The choice of states: As the exercise 13 shows, California has the largest frequencies of legislative changes that have 'Restrictive' effects, and Tennessee has the largest frequencies of legislative changes that have “Permissive” effects. New York has more restrictive changes over permissive changes with a big difference. These states allow for comparison of homicide-rate patterns among states with different changes. Mississippi is chose probably because it has a more balanced permissive and restrictive.
 
-Patterns: From the plot we can see that New York has the lowest death rate, and then California, Mississippi, and Tennessee is the highest. The four states all show general similar pattern across years. Mississippi has consistenly higher highest death rate than other states, and the highest is around 2021.
+Patterns: From the plot we can see that New York has the lowest death rate, and then California, and Tennessee. The four states all show general similar pattern across years. Mississippi has consistently highest death rate than other states, and the highest is around 2021.
 
 Data filtering and combination: we can harmonize the state identifiers and combine RAND legislation data with the CDC homicide data by state and year. Then we can compare the type of legislative changes with death rates and define an appropriate time period.
