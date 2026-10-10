@@ -1,0 +1,479 @@
+---
+title: Problem set 4
+date: 2026-10-09
+author: Yixuan Xin
+format: html
+editor: 
+  markdown: 
+    wrap: 72
+---
+
+# Doing problem set 4
+
+Retrieve this quarto document and place a copy in your bst260
+repository.
+
+You can find a copy at <https://tinyurl.com/260pset04> and retrieve by
+curl or wget, or by any other method.
+
+Call it pset04.qmd.
+
+You will be editing the document directly to solve exercise 6, so use
+the document to present your solutions to all the problems. Place your
+text and executable code, properly marked up, after each query for each
+exercise. You might use a horizontal rule to help discriminate your
+material from the text of the problem set.
+
+Place your name as the author of the solutions in the yaml header above.
+
+When you have finished editing this document with your solutions place
+it and your compiled html in the solutions folder of your bst260
+repository.
+
+# Descriptive statistics for the NHANES dataset
+
+The NHANES package on CRAN includes a dataset called "NHANES" that
+addresses issues of sampling to permit direct statistical analyses.
+
+Example analyses of the weighted survey data assembled by the National
+Center for Health Statistics are available. An example is
+[here](https://wwwn.cdc.gov/nchs/data/Tutorials/Code/DB303_R.r); also of
+interest is the nhanesA package, which leverages a containerized
+relational database. A publication is
+[available](https://pmc.ncbi.nlm.nih.gov/articles/PMC11020206/).
+
+Here we use the 'resampled' version for simplicity.
+
+## Software setup
+
+Let's get the necessary software. Use `install.packages` for any
+packages you are missing.
+
+```{r lknh, message=FALSE}
+library(NHANES)
+data(NHANES)
+library(dplyr)
+library(table1)
+library(ggplot2)
+nh11 = NHANES |> filter(SurveyYr == "2011_12")
+```
+
+## "Table 1"
+
+The `table1` package/function provides a powerful approach to producing
+summary statistics. We will focus on the measured quantity "diastolic
+blood pressure" as obtained by averaging several repeat measures for
+each participant visit.
+
+```{r femd, message=FALSE}
+#| tbl-cap: "Basic DBP statistics for females"
+#| results: asis
+table1(~BPDiaAve|Race3, data=nh11 |> filter(Sex=="female"))
+```
+
+```{r mald, message=FALSE}
+#| tbl-cap: "Basic DBP statistics for males"
+#| results: asis
+table1(~BPDiaAve|Race3, data=nh11 |> filter(Sex=="male"))
+```
+
+### Exercise 1.
+
+Write and run the *dplyr* code to reproduce the means, standard
+deviations and number of missing values for BPDiaAve in each table. The
+result should have column names "Sex", "Race3", "mean", "sd", "nmiss".
+Records for females should come first and rows should be sorted by race
+within gender.
+
+```{r femd, message=FALSE}
+#| tbl-cap: "Basic DBP statistics for females"
+#| results: asis
+
+nh11 |> 
+  group_by(Sex,Race3) |> 
+  summarise(
+    mean = mean(BPDiaAve,na.rm = TRUE), #to remove/ignore missing values
+    sd = sd(BPDiaAve, na.rm = TRUE),
+    nmiss = sum(is.na(BPDiaAve)),
+    .groups ='drop'
+              ) |>
+      arrange(Sex, Race3)
+
+```
+
+### Exercise 2.
+
+Something very implausible is present in the data. Describe it and
+reproduce the table1 results and dplyr summaries after "fixing" it.
+
+```{r}
+summary(nh11$BPDiaAve)
+nh11 |>
+  arrange(desc(BPDiaAve))|>
+  select(Sex, Race3,BPDiaAve)|>
+  head(5)
+nh11 |>
+  summarise(
+    zero=sum(BPDiaAve ==0, na.rm = TRUE),
+    missed = sum(is.na(BPDiaAve)),
+    total_rows = n()
+  )
+```
+
+I check the diastolic blood pressure and found multiple participants
+have 0 mmHg, which is implausible because they may affect the data
+measurement. There are 37 0 mmHg diastolic blood pressure and 719
+missing values among 5000 records. So I treat them as missing values.
+
+```{r}
+nh11_clean <- nh11 |>
+  mutate(BPDiaAve = na_if(BPDiaAve,0))
+sum(is.na(nh11_clean$BPDiaAve))
+```
+
+```{r}
+dplyr_means<- nh11_clean |> 
+  group_by(Sex,Race3) |> 
+  summarise(
+    mean = mean(BPDiaAve,na.rm = TRUE), #to remove/ignore missing values
+    sd = sd(BPDiaAve, na.rm = TRUE),
+    nmiss = sum(is.na(BPDiaAve)),
+    .groups ='drop'
+  ) |>
+  arrange(Sex, Race3)
+dplyr_means
+```
+
+Description: The new dataframe has higher mean and more missing values.
+
+Reproducing table 1:
+
+```{r}
+table1(~BPDiaAve|Race3, data=nh11_clean |> filter(Sex=="male"))
+table1(~BPDiaAve|Race3, data=nh11_clean |> filter(Sex=="female"))
+```
+
+### Exercise 3: Compact estimation procedures for averages
+
+R's built-in modeling functions can save a lot of filtering and
+summarization activity. To estimate average diastolic blood pressures
+for combinations of race and gender, we can use
+
+```{r dolm1}
+lm1 = lm(BPDiaAve~Race3*Sex-1, data=nh11, na.action=na.omit)
+lm1$coef
+```
+
+The syntax `y ~ a * b - 1` for numerical `y` and factor variables `a`
+and `b` is described as fitting "first-order interactions". Subgroups of
+individuals are formed for every combination of factor levels, and the
+mean value of `y` is computed for each subgroup. The `-1` suppresses an
+intercept term.
+
+R uses a peculiar naming convention for the estimated parameters.
+`Race3Asian` is used to show that the factor level for Race3 is Asian.
+`Sexmale` has a coefficient. This indicates to us that the 'reference'
+sex is female. Finally colon is used for combinations of factor values.
+We can recover the mean value for Black males by adding the coefficients
+for Race3Black, Sexmale, and Race3Black:Sexmale.
+
+Create the compact estimates using the version of the data "repaired" in
+Exercise 2 and verify that the estimates from lm recover the dplyr
+summaries.
+
+```{r}
+lm1_clean = lm(BPDiaAve~Race3*Sex-1, data=nh11_clean, na.action=na.omit)
+lm1_clean$coef
+```
+
+```{r}
+cleaned <- expand.grid(
+  Race3 =levels(nh11_clean$Race3),
+  Sex = levels(nh11_clean$Sex)
+)
+cleaned$lm_mean <- predict(lm1_clean, newdata =cleaned)
+
+cleaned
+```
+
+```{r}
+recover <- cleaned |>
+  left_join(dplyr_means, by=c('Sex','Race3'))|>
+  mutate(
+    difference = lm_mean -mean,
+    equal = near(lm_mean, mean)
+  )
+recover
+```
+
+The 'equal' column shows that the estimates from lm recover the dplyr
+summaries.
+
+### Exercise 4: Visualizing DBP distributions by age and race
+
+Here is classic R list manipulation and plotting code:
+
+```{r lkmmm}
+par(mfrow=c(3,2),las=2,mar=c(5,4,2,2))
+ss = split(nh11, nh11$Race3)
+tt = lapply(names(ss), function(x) {d = ss[[x]]; 
+   boxplot(split(d$BPDiaAve, d$AgeDecade), main=x, ylim=c(0,120))})
+```
+
+Write and run the ggplot2 code to produce a similar display.
+
+```{r}
+ggplot(data = nh11, aes(x=AgeDecade,y=BPDiaAve))+ # for each graph sets x and y
+  geom_boxplot(fill ='grey80',color='black',na.rm=TRUE,outlier.shape=1)+ #boxplot
+  facet_wrap(~ Race3,ncol=2) +# split into race and have a 3*2 layout
+  scale_x_discrete(na.translate = FALSE)+
+  scale_y_continuous(breaks = seq(0, 120, by = 20))+
+  coord_cartesian(ylim=c(0,120))+ #mar=c(5,4,2,2))+
+  theme_classic()+
+  theme(
+    axis.text.x =element_text(angle = 90, hjust =1),
+    strip.background = element_blank(),
+    strip.text = element_text(face = "bold"),
+    panel.border = element_rect(color = "black", fill = NA)
+    ) #las =2
+
+```
+
+### Exercise 5: Do ethnic groups have comparable age distributions?
+
+Use the compact estimation procedure with Age as the "y" variable. What
+do you see as the most prominent indications of heterogeneity in age
+distributions across the different group combinations?
+
+Describe how to form observed and expected counts in the cells of the
+table
+
+```{r lktab}
+with(nh11, table(AgeDecade, Race3))
+```
+
+```{r}
+lm_age <- lm(Age ~ Race3 * Sex - 1, data = nh11)
+ageg <- expand.grid(
+  Race3 = levels(nh11$Race3),
+  Sex = levels(nh11$Sex)
+)
+ageg$mean_age <- predict(lm_age,newdata=ageg)
+ageg
+```
+
+```{r}
+nh11 |>
+  group_by(Race3,Sex)|>
+  summarise(
+    mean_age=mean(Age,na.rm =TRUE),
+    sd_age =sd(Age,na.rm=TRUE),
+    .groups='drop'
+  )
+```
+
+Description:
+
+Expected & Observed:
+
+```{r}
+observed <-with(nh11, table(AgeDecade, Race3))
+expected <- outer(
+  rowSums(observed),
+  colSums(observed)
+  )/sum(observed)
+expected
+```
+
+### Exercise 6: Cards to Dice
+
+Modify all the quarto and R following to replace draws from a deck of
+shuffled cards with tosses of a single six-faced die.
+
+As an example, you might start with code like
+
+```         
+die = c(1,2,3,4,5,6)
+roll = function(die) sample(die,size=1)
+set.seed(1234)
+table(replicate(100, roll(die)))
+```
+
+to model 100 tosses of a fair die.
+
+We have 100 simulated tosses of a fair six-sided die.
+
+```{r}
+die <-1:6
+set.seed(1234)
+rolls <- sample(die, size=100,replace=TRUE)
+table(rolls)
+```
+
+## Modeling six-sided die
+
+### Die faces as vectors
+
+We followed online code to produce
+
+```{r do1}
+die <-1:6
+die
+# Combine ranks and suits to make 52 unique cards # 4 suits and 13 ranks in one deck(52)
+```
+
+A six-sided die is a vector with 6 elements. This vector "models" the
+outcomes of a die toss.
+
+## Draws as samples
+
+With R's `sample` function, we can simulate tossing. We use `set.seed`
+to make sure reproducibility.
+
+```{r lkshuf}
+toss_die= function(x) { 
+   stopifnot(length(x)==6, is.atomic(x)) #atomic vector check if satisfy the condition, no then stop
+   sample(x, size=1) #toss once from 6 possible results
+}
+set.seed(1234)
+drs = replicate(2000, toss_die(die)) # toss 2000 times
+head(table(drs)) #count number of times each number appear
+mean(table(drs)) # mean of freq
+2000/6 # the mean that should appear generally with equal prob
+```
+
+## A model for fairness
+
+### Intuitions
+
+For a fair die with thorough tossing and replacement, we have an
+intuition that each die number has the same chance of being drawn as the
+top one.
+
+In 2000 independent tosses, the *expected* number of appearances of each
+face is 2000/6(333.33).
+
+### Formalism
+
+Formally, we can abstract from the actual names of the die and represent
+the tossing procedure in this way:
+
+Let $i = 1, \ldots, 6$ denote 6 sides.
+
+Let $j = 1, \ldots, 2000$ denote tosses.
+
+Define
+
+$$C_{ij} =
+\begin{cases}
+  1 & \text{if toss } j \text{ results in face } i, \\
+  0 & \text{otherwise.}
+\end{cases}$$
+
+Now define $X_i = \sum_j C_{ij}$. Our statement above about the
+intuitive expectation on the number of appearances of any given number
+will be written $$EX_i = 2000/6 \text{ for all } i = 1,\ldots, 6.$$
+
+This is equivalent to the following formulation. Let
+$p_i, i=1, \ldots, 6$ denote the *probability* (not yet defined in any
+formal way) that our toss procedure yields number $i$. Then
+$EX_i = 2000 p_i$ for all $i$. For the general case of $n$ tosses,
+$EX_i = n p_i$.
+
+## Measuring departure from fairness
+
+A well-established metric for assessing departure from fairness is
+called "chi-squared". We will use the symbol $D$ to represent this
+measure. Large values of $D$ can be indicative of departure of the
+observed frequencies from the expected values.
+
+$$D = \sum_{i=1}^{6} \frac{(X_i - EX_i)^2}{EX_i}$$
+
+We'll implement $D$ as `mystat` and show that it is equivalent to a
+quantity computed in R with `chisq.test`.
+
+```{r OmE}
+mystat = function(dat, expected) {
+  sum((table(factor(dat, levels = 1:6)) - expected)^2 / expected)
+}
+ExpectedCount = 2000/6
+sum((table(drs)-ExpectedCount)^2/ExpectedCount)
+chisq.test(table(drs))
+mystat(drs, ExpectedCount)
+```
+
+Note that `chisq.test` reports the same statistic as `mystat`, but
+includes values for `df` (degrees of freedom) and `p-value`. "Degrees of
+freedom" refers here to the fact that we have a fixed number of count
+categories (6 numbers), and if 5 are known, the value for the 6th can be
+deduced -- it is "unfree".
+
+For a fair die, the expected frequency of each face is 2000/6. The
+chi-squared has 5 degrees of freedom due to six categories and fixed
+total number of tosses.
+
+The p-value is a quantity that, when small, can be indicative of a
+departure from the expected outcome of an experiment. We will return to
+that concept at a later date.
+
+## Replicating our test of fairness many times
+
+Any given collection of toss events will yield a value of $D$. Different
+series will yield different values of $D$, but when the die is fair, the
+variation in $D$ is prescribed by the mathematics of probability.
+
+We will make a histogram of 100 replicates of 2000 tosses to exhibit
+variation in $D$.
+
+```{r domore}
+set.seed(1234)
+predist = lapply(1:100, function(x) replicate(2000, toss_die(die))) #replicate 100 times exp. each exp rolls the die 2000 times.
+dist = sapply(predist, function(x)mystat(x, expected=2000/6)) #calculate each experiment's chi-square
+hist(dist, prob=TRUE) # for histogram of 100 replicates.
+```
+
+With 1000 replicates, we get a more pleasing display.
+
+```{r domore2, cache=TRUE}
+set.seed(1234)
+predist = lapply(1:1000, function(x) replicate(2000, toss_die(die)))
+dist = sapply(predist, function(x)mystat(x, expected=2000/6))
+hist(dist, probability=TRUE)
+```
+
+The form of this histogram (drawn in R with the `probability` argument
+set to TRUE) can be approximated by the density of the chi-squared
+distribution with 5 degrees of freedom.
+
+```{r lkdens}
+hist(dist, probability=TRUE) # y axis is density
+lines(1:100, dchisq(1:100, 5)) # generate integer from 1 to 100 for x axis.
+```
+
+The "5" fixes the degrees of freedom of the model for which the density
+will be drawn.
+
+## Interpret
+
+What's the difference between these two runs?
+
+```{r lkbad}
+set.seed(1234)
+baddie = die
+baddie[1] = 6
+newdrs = replicate(2000, toss_die(baddie))
+mystat(newdrs, ExpectedCount)
+```
+
+```{r lkbad2}
+set.seed(1234)
+baddie[2] = 6
+newdrs = replicate(2000, toss_die(baddie))
+mystat(newdrs, ExpectedCount)
+```
+
+The difference is the first run has a unfair die, where the probability
+of 6 is 2/6(1/3), and the second run has a worse unfair die, where the
+probability of 6 is 3/6(1/2). We may have a larger chi-squared
+statistic, which show how the chi-squared statistic measures
+discrepancies between observed and expected frequencies.

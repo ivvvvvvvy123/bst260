@@ -153,7 +153,7 @@ cdcmurd |> filter(is.na(Death.Rate)) |>  group_by(Location) |> summarise(mn=mean
 >
 > 6 WY 17.2
 
-From the result, we see that the mean value among these states having missing values have a relatively low mean deaths, ranging from 10 to 19. However, the median number of deaths is 250, which is higher. Therefore, the death rates are missing probably because a low death numbers and cdc may not report a statistically stable death rate. I learn to compare different summary statistics and compare there differences.
+From the result, we see that the mean value among these states having missing values have a relatively low mean deaths, ranging from 10 to 19. However, the median number of deaths is 250, which is higher. Therefore, the death rates are missing probably because a low death numbers and cdc may not report a statistically stable death rate. I learn to compare different summary statistics and compare their differences.
 
 ### Exercise 10.
 
