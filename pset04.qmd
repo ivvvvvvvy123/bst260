@@ -58,8 +58,6 @@ library(ggplot2)
 nh11 = NHANES |> filter(SurveyYr == "2011_12")
 ```
 
-## "Table 1"
-
 The `table1` package/function provides a powerful approach to producing
 summary statistics. We will focus on the measured quantity "diastolic
 blood pressure" as obtained by averaging several repeat measures for
@@ -85,7 +83,7 @@ result should have column names "Sex", "Race3", "mean", "sd", "nmiss".
 Records for females should come first and rows should be sorted by race
 within gender.
 
-```{r femd, message=FALSE}
+```{r}
 #| tbl-cap: "Basic DBP statistics for females"
 #| results: asis
 
@@ -109,9 +107,9 @@ reproduce the table1 results and dplyr summaries after "fixing" it.
 ```{r}
 summary(nh11$BPDiaAve)
 nh11 |>
-  arrange(desc(BPDiaAve))|>
-  select(Sex, Race3,BPDiaAve)|>
-  head(5)
+  arrange(BPDiaAve)|>
+  select(Sex, Race3,Age, BPDiaAve)|>
+  head(10)
 nh11 |>
   summarise(
     zero=sum(BPDiaAve ==0, na.rm = TRUE),
@@ -120,10 +118,11 @@ nh11 |>
   )
 ```
 
-I check the diastolic blood pressure and found multiple participants
-have 0 mmHg, which is implausible because they may affect the data
-measurement. There are 37 0 mmHg diastolic blood pressure and 719
-missing values among 5000 records. So I treat them as missing values.
+I check the diastolic blood pressure and found several participants have
+a diastolic blood pressure of 0 mmHg, which is implausible for a living
+person and may reflects a failed measurement, so I treat them as missing
+values. There are 37 0 mmHg diastolic blood pressure and 719 missing
+values among 5000 records.
 
 ```{r}
 nh11_clean <- nh11 |>
@@ -144,13 +143,15 @@ dplyr_means<- nh11_clean |>
 dplyr_means
 ```
 
-Description: The new dataframe has higher mean and more missing values.
+Description: The mean diastolic blood pressure in every sex \* Race
+group is higher with no 0 value. The nmiss count also increases because
+of more missing values being counted.
 
 Reproducing table 1:
 
 ```{r}
-table1(~BPDiaAve|Race3, data=nh11_clean |> filter(Sex=="male"))
 table1(~BPDiaAve|Race3, data=nh11_clean |> filter(Sex=="female"))
+table1(~BPDiaAve|Race3, data=nh11_clean |> filter(Sex=="male"))
 ```
 
 ### Exercise 3: Compact estimation procedures for averages
@@ -182,32 +183,35 @@ Exercise 2 and verify that the estimates from lm recover the dplyr
 summaries.
 
 ```{r}
-lm1_clean = lm(BPDiaAve~Race3*Sex-1, data=nh11_clean, na.action=na.omit)
-lm1_clean$coef
+lm1_clean = lm(BPDiaAve ~ Race3*Sex-1, data= nh11_clean) #-1 remove intercept, so each race has its own coef.
+lm1_clean$coef #asian as reference race, female as reference gender.
 ```
 
 ```{r}
-cleaned <- expand.grid(
-  Race3 =levels(nh11_clean$Race3),
-  Sex = levels(nh11_clean$Sex)
-)
-cleaned$lm_mean <- predict(lm1_clean, newdata =cleaned)
-
-cleaned
+coef(lm1_clean)[1:6]
+dplyr_means|> filter(Sex == 'female')|>
+  select(mean)
 ```
 
 ```{r}
-recover <- cleaned |>
-  left_join(dplyr_means, by=c('Sex','Race3'))|>
-  mutate(
-    difference = lm_mean -mean,
-    equal = near(lm_mean, mean)
-  )
-recover
+female <- cf[1:6]
+baseline <-cf['Sexmale']
+ext <-c(0,cf[8:12])
+male <-female +baseline +ext #cf['Race3Black']+cf['Sexmale']+cf['Race3Black:Sexmale']
+male
+dplyr_means |> filter(Sex == "male") |> select(Race3, mean)
+
 ```
 
-The 'equal' column shows that the estimates from lm recover the dplyr
-summaries.
+```{r}
+compare <- dplyr_means|>
+  mutate(lm_mean =c(female,male))
+compare
+all.equal(compare$mean, compare$lm_mean, check.attributes = FALSE)
+```
+
+From the result, we can see that the estimates from lm recover the dplyr
+summaries with a 'TRUE' output.
 
 ### Exercise 4: Visualizing DBP distributions by age and race
 
@@ -314,12 +318,9 @@ table(rolls)
 
 ### Die faces as vectors
 
-We followed online code to produce
-
 ```{r do1}
 die <-1:6
 die
-# Combine ranks and suits to make 52 unique cards # 4 suits and 13 ranks in one deck(52)
 ```
 
 A six-sided die is a vector with 6 elements. This vector "models" the
@@ -337,7 +338,7 @@ toss_die= function(x) {
 }
 set.seed(1234)
 drs = replicate(2000, toss_die(die)) # toss 2000 times
-head(table(drs)) #count number of times each number appear
+table(drs) #count number of times each number appear
 mean(table(drs)) # mean of freq
 2000/6 # the mean that should appear generally with equal prob
 ```
@@ -346,9 +347,8 @@ mean(table(drs)) # mean of freq
 
 ### Intuitions
 
-For a fair die with thorough tossing and replacement, we have an
-intuition that each die number has the same chance of being drawn as the
-top one.
+For a fair die with thorough tossing and replacement, each side has the
+same chance of landing face up.
 
 In 2000 independent tosses, the *expected* number of appearances of each
 face is 2000/6(333.33).
@@ -472,8 +472,12 @@ newdrs = replicate(2000, toss_die(baddie))
 mystat(newdrs, ExpectedCount)
 ```
 
-The difference is the first run has a unfair die, where the probability
-of 6 is 2/6(1/3), and the second run has a worse unfair die, where the
-probability of 6 is 3/6(1/2). We may have a larger chi-squared
-statistic, which show how the chi-squared statistic measures
-discrepancies between observed and expected frequencies.
+They both use the same seed 1234. The difference is the first run has an
+unfair die, where the probability of 6 is 2/6(1/3), and the second run
+has a worse unfair die, where the probability of 6 is 3/6(1/2). For the
+first run, the counts are 0 for face 1, against the expected 333.33 for
+each face, which gives D=704.158. For the second run, the counts are 0
+for both face 1 and 2, giving D=1949.95. The more unfair die produces
+the larger D. The We may have a larger chi-squared statistic, which show
+how the chi-squared statistic measures discrepancies between observed
+and expected frequencies.
