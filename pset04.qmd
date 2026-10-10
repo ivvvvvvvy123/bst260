@@ -250,44 +250,60 @@ do you see as the most prominent indications of heterogeneity in age
 distributions across the different group combinations?
 
 Describe how to form observed and expected counts in the cells of the
-table
+table. The ethic groups do not have comparable age distributions.
 
 ```{r lktab}
 with(nh11, table(AgeDecade, Race3))
 ```
 
 ```{r}
-lm_age <- lm(Age ~ Race3 * Sex - 1, data = nh11)
-ageg <- expand.grid(
-  Race3 = levels(nh11$Race3),
-  Sex = levels(nh11$Sex)
-)
-ageg$mean_age <- predict(lm_age,newdata=ageg)
-ageg
+lm_age = lm(Age ~ Race3*Sex-1, data= nh11_clean) 
+cf_age <-coef(lm_age)
 ```
 
 ```{r}
-nh11 |>
-  group_by(Race3,Sex)|>
-  summarise(
-    mean_age=mean(Age,na.rm =TRUE),
-    sd_age =sd(Age,na.rm=TRUE),
-    .groups='drop'
-  )
+female_age <-cf_age[1:6]
+male_age <- cf_age[1:6]+cf_age['Sexmale']+c(0,cf_age[8:12])
+age_res<- data.frame(
+  Race3 =levels(nh11_clean$Race3),
+  female =round(female_age,1),
+  male = round(male_age,1),
+  row.names =NULL
+)
+age_res
 ```
 
-Description:
+Description: The most prominent heterogeneity is across races rather
+than between sexes. There are differences among races for mean ages.
+White has the oldest group (female:40.1, male:39.7), and Mexican has the
+youngest mean age(female: 26.5, male:26.5). Within race, the age
+difference is much smaller. The sex difference does not have consistency
+across races. For Asians, the females are about 6 years older than
+males, and Other, the females are 5 years younger than male.
 
-Expected & Observed:
+Observed & Expected:
 
 ```{r}
 observed <-with(nh11, table(AgeDecade, Race3))
-expected <- outer(
-  rowSums(observed),
-  colSums(observed)
-  )/sum(observed)
-expected
+observed
 ```
+
+```{r}
+expected <- outer( # get a 8 by 6 table
+  rowSums(observed),# total number for each age group
+  colSums(observed) # total number for each race
+  )/sum(observed) # divider by total number: /n
+expected
+all.equal(expected, chisq.test(observed)$expected, check.attributes = FALSE)
+```
+
+Observed counts are the actual number of people in each cell(each age
+decade and race combination). Expected counts are the counts we expect
+if the age decade and the race are independent. To form expected counts,
+we first find the total number of people in each age decade(row) and the
+total number for each race(column), and we multiply the row and the
+column and divide by the total number of participants(n), then we get
+the expected count for each cell.
 
 ### Exercise 6: Cards to Dice
 
