@@ -83,9 +83,9 @@ result should have column names "Sex", "Race3", "mean", "sd", "nmiss".
 Records for females should come first and rows should be sorted by race
 within gender.
 
+---
+
 ```{r}
-#| tbl-cap: "Basic DBP statistics for females"
-#| results: asis
 
 nh11 |> 
   group_by(Sex,Race3) |> 
@@ -103,6 +103,8 @@ nh11 |>
 
 Something very implausible is present in the data. Describe it and
 reproduce the table1 results and dplyr summaries after "fixing" it.
+
+---
 
 ```{r}
 summary(nh11$BPDiaAve)
@@ -161,6 +163,7 @@ summarization activity. To estimate average diastolic blood pressures
 for combinations of race and gender, we can use
 
 ```{r dolm1}
+
 lm1 = lm(BPDiaAve~Race3*Sex-1, data=nh11, na.action=na.omit)
 lm1$coef
 ```
@@ -182,6 +185,8 @@ Create the compact estimates using the version of the data "repaired" in
 Exercise 2 and verify that the estimates from lm recover the dplyr
 summaries.
 
+---
+
 ```{r}
 lm1_clean = lm(BPDiaAve ~ Race3*Sex-1, data= nh11_clean) #-1 remove intercept, so each race has its own coef.
 lm1_clean$coef #asian as reference race, female as reference gender.
@@ -194,6 +199,7 @@ dplyr_means|> filter(Sex == 'female')|>
 ```
 
 ```{r}
+cf <- coef(lm1_clean)
 female <- cf[1:6]
 baseline <-cf['Sexmale']
 ext <-c(0,cf[8:12])
@@ -226,6 +232,8 @@ tt = lapply(names(ss), function(x) {d = ss[[x]];
 
 Write and run the ggplot2 code to produce a similar display.
 
+---
+
 ```{r}
 ggplot(data = nh11, aes(x=AgeDecade,y=BPDiaAve))+ # for each graph sets x and y
   geom_boxplot(fill ='grey80',color='black',na.rm=TRUE,outlier.shape=1)+ #boxplot
@@ -256,9 +264,11 @@ table. The ethic groups do not have comparable age distributions.
 with(nh11, table(AgeDecade, Race3))
 ```
 
+---
+
 ```{r}
-lm_age = lm(Age ~ Race3*Sex-1, data= nh11_clean) 
-cf_age <-coef(lm_age)
+lm_age <- lm(Age ~ Race3*Sex - 1, data = nh11)
+cf_age <- coef(lm_age)
 ```
 
 ```{r}
@@ -320,6 +330,8 @@ table(replicate(100, roll(die)))
 ```
 
 to model 100 tosses of a fair die.
+
+---
 
 We have 100 simulated tosses of a fair six-sided die.
 
