@@ -1,0 +1,258 @@
+---
+title: "BST 260 Problem set 5: Using distributions"
+format: html
+editor: visual
+author: "Yixuan Xin"
+---
+
+## **Exercise 1a:**
+
+```{r}
+deck = apply(expand.grid(c("A", 2:10, "J", "Q", "K"), c("Hearts", "Spades", 
+                                                        "Clubs", "Diamonds")), 1, paste, collapse=" ")
+head(deck)
+```
+
+```{r}
+has2h = function(x) length(grep("Hearts", x))==2
+set.seed(1234)
+s=table(replicate(100000, has2h(sample(deck,5,replace=FALSE))))
+s
+```
+
+```{r}
+theory=dhyper(x=2,m=13,n=39,k=5)
+theory
+true_prop=s[['TRUE']]/sum(s)
+true_prop
+```
+
+To get an accurate estimate, one way is to increase the number of sample from 100 to 100000. Using dhyper the result is 0.2743, and the large number is 0.2727. They are closer to each other.
+
+## **Exercise 1b:**
+
+```{r}
+N=52
+heart=13
+n=5
+p=heart/N
+ex=n*p
+varx=n*p*(1-p)*(N-n)/(N-1)
+ex
+varx
+```
+
+```{r}
+x=0:5
+prob=dhyper(x,13,39,5)
+rbind(x,prob)
+```
+
+```{r}
+Ex=sum(x*prob)
+Varx=sum(x^2*prob)-sum(x*prob)^2
+Ex
+Varx
+```
+
+Expectation is 1.25, and variance is 0.864.
+
+## **Numerical summaries; robustness**
+
+9.  
+
+```{r}
+library(HistData)
+x<-Galton$child
+mean(x)
+sd(x)
+```
+
+10\.
+
+```{r}
+median(x)
+#median absolute deviation
+mad(x)
+```
+
+11-14.
+
+```{r}
+x_with_error <- x
+x_with_error[1] <- x_with_error[1]*10
+#mean
+mean(x_with_error)-mean(x)
+#sd
+sd(x_with_error)-sd(x)
+#median
+median(x_with_error)-median(x)
+#mad
+mad(x_with_error)-mad(x)
+
+```
+
+15\.
+
+```{r}
+
+summary(x_with_error)
+boxplot(x_with_error, horizontal = TRUE,
+        main = "Boxplot of child heights (with error)",
+        xlab = "Height (inches)")
+
+```
+
+Based on the boxplot, the main heights are close to 60-75 inches, and an outlier higher than 600. From the summary(x_with_error), the max is 617, which is too high than others. It is impossible to have height around 600 inches, so it is a record error.
+
+16. 
+
+```{r}
+error_avg<-function(k){
+  x[1]<-k
+  mean(x)
+}
+error_avg(10000)
+error_avg(-10000)
+x[1]
+```
+
+## **Discrete probability**
+
+9.  If they lost the first round, they need to win at least 4 in the next 6 rounds. Pr(Y\>=4)=1-Pr(Y\<=3). With a 50:50 probability in next 6 rounds we have:
+
+    ```{r}
+    won=1-pbinom(3,6,0.5)
+    won[1]
+    ```
+
+ The probability that they win the series is 0.34375.
+
+10. 
+
+```{r}
+set.seed(2026) 
+events <- replicate(10000, {games<-sample(c('Win','Lose'), 6,replace = TRUE) #each game is independent
+sum(games=='Win')>=4 # get true/flase
+})
+mean(events)
+```
+
+ The probability that they win the series is 0.348, which is close to the previous probability.
+
+11. 
+
+```{r}
+prob_win <- function(p, B =10000){
+  result <- replicate(B, {
+    b_win <- sample(c(1,0), 7, replace = TRUE, prob = c(1 - p, p))
+    sum(b_win) >= 4
+  })
+  mean(result)
+}
+p <- seq(0.5, 0.95, 0.025)
+ws<-sapply(p,prob_win)
+ws
+```
+
+```{r}
+plot(p,ws,type='b',pch=16,
+     xlab='A wins(p)',ylab='B wins(1-p)' )
+```
+
+When p=0.5, the probability of B wins is also 0.5. As p increases, the probability of B wins decreases quickly.
+
+## **Continuous probability**
+
+1.  
+
+```{r}
+mu<-64
+sigma<-3
+#P(x<=5feet/60inches)
+pnorm(60,mu,sigma)
+```
+
+The probability that she is 5 feet or shorter is 0.09.
+
+2.  
+
+```{r}
+#she is 6 feet or taller
+1-pnorm(72,mu,sigma)
+```
+
+The probability that she is 6 feet or taller is 0.004.
+
+3.  $$\Pr(61 < X \le 67) = \Pr(X \le 67) - \Pr(X \le 61)$$
+
+```{r}
+#she is between 61 and 67 inches
+pnorm(67,mu,sigma)-pnorm(61,mu,sigma)
+
+```
+
+The probability that she is between 61 and 67 inches is 0.683.
+
+4.  
+
+```{r}
+pnorm(67*2.54,mu*2.54,sigma*2.54)-pnorm(61*2.54,mu*2.54,sigma*2.54)
+
+```
+
+The answer stays the same, 0.683.
+
+5.  $$\Pr(Z \le 1) - \Pr(Z \le -1)$$
+
+```{r}
+pnorm(1)-pnorm(-1) # in z
+```
+
+pnorm(1) is the probability of Z\<=1, pnorm(-1) is the probability of Z\<=-1. The difference is the area between -1 and 1. The probability that a randomly picked, normally distributed random outcome is within 1 SD of the average is 0.683.
+
+6.  a\.
+
+    $$E[Y] = E[cX] = c\,E[X] = c\mu$$
+
+    $$Var[Y] = Var[cX] = c^2\,Var[X] = c^2\sigma^2$$
+    $$SD(Y)=c\sigma$$
+
+b\.
+
+$$Y-c\mu/(c\sigma)=(cX-c\mu)/c\sigma=(X-\mu)/\sigma$$
+
+Divide by c by the denominator and nominator.
+
+This one does not have unit because both the denominator and the nominator have unit inch and the division cancels each other.
+
+c\.
+
+The correct choices are A, B, C.
+
+7.  
+
+```{r}
+#P(X ≤ q) = 0.99 q:
+qnorm(0.99,mean=69,sd=3)
+```
+
+The 99th percentile is 75.98.
+
+8\.
+
+```{r}
+B<-1000
+result <- replicate(B, {
+    iq <- rnorm(10000,mean=100,sd=15) # random generate 10000 iq N(100,15^2)
+    max(iq) # the highest
+  })
+
+hist(result,breaks=50,
+     xlab='Max IQ in the district')
+mean(result)
+sd(result)
+range(result)
+```
+
+Interpretation: from the graph, the distribution of the highest IQ would look like a right-skewed histogram centering around 157.6 and a long upper tail(max=179.43).
