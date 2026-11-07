@@ -1,0 +1,269 @@
+---
+title: "pset06.qmd"
+format: html
+editor: visual
+author: "Yixuan Xin"
+---
+
+## Q1
+
+$$y_i = \beta_0 + \beta_1 x_i + \varepsilon_i,
+\quad i = 1,\ldots,11$$
+
+fitted value:
+
+$$\hat{y}_i = \hat{\beta}_0 + \hat{\beta}_1 x_i$$
+
+Residual:
+
+$$e_i = y_i - \hat{y}_i$$
+
+Data = Fit + Residual:
+
+$$y_i = \hat{y}_i + e_i$$
+
+## Q2
+
+$$y_i = 3.00 + 0.5x_i + \varepsilon_i$$
+
+## Q3
+
+```{r}
+fit1 <-lm(y1 ~x1,data=anscombe)
+summary(fit1)
+confint(fit1,level=0.99)
+```
+
+The approximate 99% confidence interval for the slope parameter is (0.12, 0.88).
+
+## Q4:
+
+```{r}
+fit2<-lm(y2 ~x2 + I(x2^2),data=anscombe)
+summary(fit2)
+plot(anscombe$x2,anscombe$y2)
+```
+
+$$y_2 = -5.996 + 2.781x_2 - 0.127x_2^2 + \varepsilon_2$$
+
+## Q5
+
+```{r}
+library(MASS) #robost linear regre
+fit3<-rlm(y3~x3,data=anscombe)
+#intercept and slope
+coef(fit3)
+#scatter plot
+plot(anscombe$x3,anscombe$y3,pch=19,xlab='x3',ylab='y3',main='Robust Linear Regression')
+abline(fit3,col='red')
+#abline(lm(y3~x3,data=anscombe),col='blue',lty=2)
+```
+
+The fitted robust linear regression model is:
+
+$$\hat{y}_{3i} = 4.00 + 0.346x_{3i}$$
+
+### Q6 a
+
+```{r}
+library(dslabs)
+library(dplyr)
+northeast<-c('ME','NH','VT')
+southeast<-c('FL','GA','AL')
+```
+
+```{r}
+agg<-murders|>
+  filter(abb %in% c(northeast,southeast))|>
+  mutate(
+    newreg =ifelse(abb %in% northeast, 
+                   'far NE','far SE'))|>
+  group_by(newreg)|>
+  summarize(
+    total=sum(total),
+    pop=sum(population),
+    .groups='drop')|>
+  mutate(rate=total/pop*1e5)
+agg
+```
+
+## Q6 b
+
+```{r}
+#mu=P*e^(beta r)
+#e^(beta r =mu/P)
+fit_p <-glm(total ~ 0+newreg,offset=log(pop),
+            family=poisson,data=agg)
+coef(fit_p)
+exp(coef(fit_p))*1e5
+```
+
+## Q6 c
+
+```{r}
+logci<- confint.default(fit_p)
+logci
+# transform to rates / 100,000 ppl
+rate<-exp(logci)*1e5
+rate
+```
+
+## Q7
+
+```{r}
+library(NHANES)
+library(dplyr)
+nh11 = NHANES |> filter(SurveyYr == "2011_12", !is.na(BPDiaAve),!is.na(BPDiaAve))
+nh11$HTN = 1*(nh11$BPSysAve > 125 | nh11$BPDiaAve > 85)
+aged = cut(nh11$Age, c(-1,seq(10,85,10)))
+ps = sapply(split(nh11$HTN, aged), mean, na.rm=TRUE)
+logit = function(x) log(x/(1-x))
+mpts = seq(5,84,10)
+par(mfrow=c(1,2),las=2)
+plot(ps~mpts, main="observed prevalence", xlab="age midpoints")
+plot(logit(ps)~mpts, main="logit prevalence", xlab="age midpoints")
+par(mfrow =c(1,1))
+
+m1 = glm(HTN~I(Age-50), data=nh11 |> filter(Age > 25), family="binomial")
+m1nc = glm(HTN~Age, data=nh11 |> filter(Age > 25), family="binomial")
+
+#log odds at age 50
+coef(m1)
+#probability at age 50
+plogis(coef(m1)[1])
+
+lm1 = lm(HTN~Age, 
+         data=nh11 |> filter(Age > 25))
+
+summary(lm1)
+```
+
+The HTN prevalence increases with the age. The relationship is approximately linear on the logic scale. The estimated probability of HTN at age 50 is 0.3865.
+
+## Q7 b
+
+The result shows that the estimated probability of HTN at age 70 using logistic regression and the observed prevalence among aged 70 are really close, showing the model predicts the HTN prevalence really well for age 70.
+
+## Q7 c
+
+```{r}
+summary(m1)$coefficients    
+oddsratiolog=confint.default(m1)    
+oddsratiolog
+```
+
+```{r}
+exp(coef(m1)[2])
+```
+
+The estimated log odds ratio for 1 year increase in age is 0.049, and a 95% CI of (0.0434,0.054). The odds ratio is 1.0499.
+
+## Q7 d
+
+```{r}
+m2 = update(m1, .~.*Sex)
+summary(m2)
+```
+
+The \* operator has both the main effect the interaction. The intercept shows the log odds of HTN at age 50 for the reference sex group. The age coeff is how the log odds change with age. The sex coeff is the difference between sex groups at age 50 and the interaction is whether the effect of age differs by sex.
+
+## Q8 a
+
+All curves center at 3, and as n gets larger the curve is narrower and more samples concentrated on 3. The curve gets more symmetric when n is larger. Sample mean is closer to real mean when sample is large enough.
+
+## Q8 b
+
+```{r}
+set.seed(1234)
+x = seq(0,5,.1)
+plot(x, dchisq(x,3), pch=".", col="blue", type="l", ylim=c(0,.4))
+x5 = replicate(1000, mean(rchisq(5, 3)))
+x50 = replicate(1000, mean(rchisq(50, 3)))
+x150 = replicate(1000, mean(rchisq(150, 3)))
+x500 = replicate(1000, mean(rchisq(500, 3)))
+x5000 = replicate(1000, mean(rchisq(5000, 3)))
+sdens = function(x,sc=4) {d = density(x); list(x=d$x, y=d$y/sc)}
+lines(sdens(x5), lty=3)
+lines(sdens(x50), lty=4)
+lines(sdens(x150), lty=5, col="gold")
+lines(sdens(x500), lty=6)
+lines(sdens(x5000), lty=7, col="brown", lwd=1.5)
+legend("topright",
+       legend = c("Chi-square(3)", "n = 5",
+                  "n = 50", "n = 150",
+                  "n = 500", "n = 5000"),
+       col = c("blue", "black", "black",
+               "gold", "black", "brown"),
+       lty = c(1, 3, 4, 5, 6, 1),
+       lwd = c(1, 1, 1, 1, 1, 1.5),
+       cex = 0.8,
+       bty = "n")
+```
+
+## Q9
+
+```{r}
+set.seed(1234) 
+x = seq(-5,5,.1)
+tdf = 1
+plot(x, dt(x,tdf), pch=".", col="blue", type="l", ylim=c(0,.4))
+x5 = replicate(1000, mean(rt(5, tdf)))
+x50 = replicate(1000, mean(rt(50, tdf)))
+x150 = replicate(1000, mean(rt(150, tdf)))
+x500 = replicate(1000, mean(rt(500, tdf)))
+x5000 = replicate(1000, mean(rt(5000, tdf)))
+sdens = function(x,sc=4) {d = density(x); list(x=d$x, y=d$y/sc)}
+lines(sdens(x5), lty=3)
+lines(sdens(x50), lty=4)
+lines(sdens(x150), lty=5, col="gold")
+lines(sdens(x500), lty=6)
+lines(sdens(x5000), lty=7, col="brown", lwd=1.5)
+legend("topright", lty=5, legend="N=150", col="gold")
+```
+
+a\. When df=3, the distribution of sample mean shorten to 0 when n is larger, conforming with the law of large numbers. When df=1, the distribution of sample mean does not change much or concentrate around 0 because the distribution has no finite mean, and the law of large numbers does not apply.
+
+b\. The other name is called Cauchy distribution. It is distinct because it does not have defined mean (no expectation and variance), The law of large numbers and CLT do not apply. The sample mean of independent standard cauchy variables has the same distribution for varied sample size.
+
+## Q10
+
+```{r}
+set.seed(1234)
+x = seq(-5,5,.05)
+plot(x, dnorm(x), col="blue", type="l", lwd=2, xlim=c(1.5,4), ylim=c(-.01,.12))
+tstat = function(x,truemean=3) {n = length(x); sqrt(n)*(mean(x)-truemean)/sd(x)}
+R = 5000
+x5 = replicate(R, tstat(rchisq(5, 3)))
+x50 = replicate(R, tstat(rchisq(50, 3)))
+x150 = replicate(R, tstat(rchisq(150, 3)))
+x500 = replicate(R, tstat(rchisq(500, 3)))
+x5000 = replicate(R, tstat(rchisq(5000, 3)))
+lines(density(x5), lty=2,col="red")
+lines(density(x50), lty=3,col="orange")
+lines(density(x150), lty=4, col="gold")
+lines(density(x500), lty=5,col="black")
+lines(density(x5000), lty=6, col="brown", lwd=1.5)
+legend("topright", lty=c(2:6), 
+       legend=paste("N=", c(5,50,150,500,5000),sep=""), 
+       col=c("red", "orange", "gold", "black", "brown"))
+```
+
+a\. As sample size increases, the distribution of the standardized sample mean approaches the standard normal distribution and showing the CLT. Limitations include a limited number of sample sizes and repetitions. It only shows one underlying distribution.
+
+b\.
+
+```{r}
+par(mfrow = c(1, 2))
+qqnorm(x5, main = "n = 5")
+#y=x intercept 0 slope=1
+abline(0, 1, col = "red")
+
+qqnorm(x500, main = "n = 500")
+abline(0, 1, col = "red")
+
+par(mfrow = c(1, 1))
+```
+
+From the graph, for n=5, the points deviate from the identity line espeically for the tail. For n=500, it fits closer to the line and demonstrates a better approximation to standard normal distribution.
+
+c\. When n is 5, 0.78% of the values exceed 2.576, compared with 0.5% under the normal distribution(0.5%). The 95% CI for the proportion below 2.576 does not include 0.995, while for n=500 the CI includes 0.995, which provide qualitative evidence for normal distribution.
