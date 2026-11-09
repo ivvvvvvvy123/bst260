@@ -1,1 +1,58 @@
+---
+title: "Problem Set Solutions"
+format: html
+editor: visual
+---
 
+## Problem 1
+
+I selected `Petal.Length` as the classification feature because it provides better separation among the three iris species.
+
+```{r do1, message=FALSE}
+library(ggplot2)
+library(tidyr)
+library(ggbeeswarm)
+
+ggplot(pivot_longer(iris, cols=1:4),
+       aes(x=factor(name), y=value, colour=Species)) +
+  geom_beeswarm()
+```
+
+I used thresholds of 2.5 and 4.9 to classify the samples into three groups.
+
+```{r lkdisc}
+feature = "Petal.Length"
+cutsl = c(0, 2.5, 4.9, 7)
+
+with(iris, table(cut(Petal.Length, cutsl), Species))
+```
+
+These thresholds completely separate setosa from the other two species. Most versicolor and virginica samples are also correctly classified. The confusion matrix contains 8 off-diagonal observations, meaning that 142 out of 150 samples are correctly classified.
+
+## Problem 2
+
+I fitted a two-parameter linear regression model using maternal body weight (`lwt`) to predict the low birth weight outcome (`low`).
+
+```{r lklbw, message=FALSE}
+library(MASS)
+
+fit = lm(low ~ lwt, data = birthwt)
+
+summary(fit)
+
+predict(fit, newdata = data.frame(lwt = 150))
+```
+
+The model has two parameters: an intercept and a slope for maternal body weight. Since `low` is a binary variable, the fitted value can be interpreted as the estimated proportion of births with low birth weight outcomes.
+
+The estimated proportion for women weighing 150 pounds is:
+
+```{r}
+estimated_proportion = predict(
+  fit,
+  newdata = data.frame(lwt = 150)
+)
+
+cat("Estimated proportion:",
+    round(estimated_proportion, 4))
+```
