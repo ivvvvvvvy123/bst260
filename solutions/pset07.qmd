@@ -1,0 +1,99 @@
+---
+title: "BST 260 Problem set 7: Topics in linear models"
+format: html
+editor: visual
+author: "Yixuan Xin"
+---
+
+```{r setup, message=FALSE}
+library(dslabs)
+library(dplyr)
+library(ggplot2)
+#data(mice_weights)
+```
+
+## Q1
+
+```{r}
+fit1 <- lm(body_weight ~ diet, data = mice_weights)
+fit2 <- lm(body_weight ~ diet + sex, data = mice_weights)
+summary(fit1)$sigma
+summary(fit2)$sigma
+```
+
+The two estimates are not the same because accounting for sex will explain additional variation in body weight that was previously included in the residuals. Thus, the model has smaller estimated residual standard deviation.
+
+## Q2
+
+```{r}
+# categorized by weights
+dat <- mice_weights
+breaks <- with(dat, seq(min(body_weight), max(body_weight), 1))
+dat <- mutate(dat, group = cut(body_weight, breaks, include.lowest = TRUE))
+
+#calculate mean and std.
+summ <- dat |>
+  group_by(group) |>
+  summarize(n = n(), avg = mean(body_weight), sd = sd(body_weight)) |>
+  filter(n > 10)
+
+summ
+# graph check if std changed by avg
+ggplot(summ, aes(avg, sd)) + geom_point() + geom_smooth(method = "lm")
+```
+
+Within 1-gram body weight bins containing more than 10 mice, the standard deviation range from approximately 0.25 to 0.36 with no clear trend as average weight increases, so the constant-variance assumption appears correct.
+
+## **Q3**
+
+```{r}
+mice_weights |>
+  ggplot(aes(x = factor(litter), y = body_weight)) +
+  geom_boxplot() +
+  facet_grid(sex ~ diet) +
+  labs(x = "Litter", y = "Body weight")
+```
+
+## Q4
+
+```{r}
+fit <- lm(body_weight ~ sex + diet + litter, data = mice_weights)
+summary(fit)$coefficients["litter2", ]
+anova(fit)
+```
+
+After adjusting for sex and diet, there is a statistically significant but small litter effect: mice from litter 2 weigh on average 1.24 g less than those from litter 1 (p = 0.0064). In the ANOVA table, litter explains only about 0.6% of the total variability in body weight, compared with about 29.9% for sex and 10.3% for diet, so litter is a much smaller proportion of the total variation than sex or diet.
+
+## Q5
+
+```{r}
+mice_weights |>
+  filter(!is.na(bone_density)) |>
+  ggplot(aes(x = diet, y = bone_density)) +
+  geom_boxplot() +
+  facet_wrap(~ sex) +
+  labs(x = "Diet", y = "Bone density")
+```
+
+Among females, mice on the high-fat diet have visibly lower bone density than those on chow (median about 0.50 vs 0.53), while the difference between diets appears much smaller among males, with substantial overlap between distributions. This suggests the diet effect on bone density is present in females but not clearly in males. Males also have higher bone density overall.
+
+## Q6
+
+```{r}
+dat <- mice_weights |> filter(!is.na(bone_density))
+
+fit_f <- lm(bone_density ~ diet, data = filter(dat, sex == "F"))
+fit_m <- lm(bone_density ~ diet, data = filter(dat, sex == "M"))
+summary(fit_f)$coefficients
+summary(fit_m)$coefficients
+```
+
+```{r}
+fit_int <- lm(bone_density ~ sex * diet, data = dat)
+summary(fit_int)$coefficients
+
+fit_sep <- lm(bone_density ~ sex + diet:sex, data = dat)
+summary(fit_sep)$coefficients
+```
+
+When fit by sex, the high-fat diet has a statistically significant negative effect on bone density in females (estimate -0.032, p = 0.001) but not in males (estimate -0.012, p = 0.23). However, the interaction term for the full model is not significant (estimate 0.019, p = 0.17). This is because a significant effect in one group and a non-significant effect in another do not imply a significant difference between the two effects. The estimated difference is not large enough relative to its standard error to be statistically significant so there is a lack of evidence the diet has difference between sexes.
