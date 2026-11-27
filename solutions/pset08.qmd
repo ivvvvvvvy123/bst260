@@ -1,0 +1,94 @@
+---
+title: "BST 260 Problem set 8: Topics in generalized linear models"
+author: "Ivy Xin"
+format: html
+---
+
+```{r setup, message=FALSE}
+library(dslabs)
+library(dplyr)
+library(ggplot2)
+```
+
+## Q1
+
+```{r}
+tab <- matrix(c(8, 9, 350, 150), nrow = 2, byrow = TRUE,
+              dimnames = list(c("Olympics", "Regular"), c("Won", "Lost")))
+tab
+```
+
+```{r}
+chisq.test(tab)
+chisq.test(tab)$expected  
+chisq.test(tab, correct = FALSE)
+```
+
+Using chi-square test with Yates' correction to compare to losing record between Olympics and regular career matches, we get X square is 3.06, df=1, p=0.080. At the o.o5 level, we cannot reject the null hypothesis that her losing rate is the same in both settings, so her Olympic record is consistent with chance. However, without the correction, the p-value is 0.044, so the conclusion is sensitive to the choice of method. the evidence(only 17 matches) is not strong enough to conclude that she performs poorly under pressure, but failing to teject the null does not prove that chance is the reason either.
+
+## Q2: C
+
+## **Q3**
+
+```{r}
+a <- 9; b <- 8; c <- 150; d <- 350  
+
+or <- (a/b) / (c/d)
+log_or <- log(or)
+se <- sqrt(1/a+1/b+1/c+1/d)       
+ci <- exp(log_or + c(-1, 1) * 1.96 * se)
+or; se; ci
+```
+
+From the result, the odds of losing in the Olympics are estimated to be 2.63 times the odds of losing in regular matches. To answer critics, the point estimate shows that she is easier to lose in Olympics. but the CI has 1, showing data also has variation. It is not fair to make the criticism that she perform worse under pressure with limited sample size(so few Olympic matches). The data does not show strong evidence she performs worse under pressure.
+
+## Q4
+
+```{r}
+dat <- data.frame(olympics = c(1, 0), lost = c(9, 150), won  = c(8, 350))
+fit <- glm(cbind(lost, won) ~ olympics, family = binomial, data = dat)
+summary(fit)
+```
+
+```{r}
+exp(coef(fit))            
+exp(confint.default(fit))
+exp(confint(fit))  
+```
+
+Based on the result of glm, the log(OR) is 0.965, with a SE=0.496. The Wald interval is between (0.99,6.93). The default profile likelihood is (0.99, 7.12). Both have similar result, which does not have strong evidence of losing under pressure.
+
+## Q5
+
+```{r}
+data(research_funding_rates)
+names(research_funding_rates)
+```
+
+```{r}
+rf <- research_funding_rates |>
+  mutate(no_men   = applications_men - awards_men,
+         no_women = applications_women - awards_women,
+         log_or = log((awards_women / no_women) / (awards_men / no_men)),
+         se     = sqrt(1/awards_women + 1/no_women + 1/awards_men + 1/no_men),
+         lower  = log_or - 1.96 * se,
+         upper  = log_or + 1.96 * se) |>
+  select(discipline, log_or, se, lower, upper)
+rf
+```
+
+```{r}
+library(ggplot2)
+rf |>
+  mutate(discipline = reorder(discipline, log_or)) |>
+  ggplot(aes(x = discipline, y = log_or, ymin = lower, ymax = upper)) +
+  geom_point() +
+  geom_errorbar(width = 0.2) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  coord_flip() +
+  labs(x = NULL, y = "log odds ratio (women vs men)")
+```
+
+## Q6
+
+Earth/life sciences and medical sciences are the disciplines for which one gender appears to be favored over the other. In both, men are favored.
